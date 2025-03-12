@@ -1,0 +1,6 @@
+numpy~=2.2.3
+spacy~=3.8.4
+aiohttp~=3.11.13
+tenacity~=9.0.0
+Jinja2~=3.1.6
+matplotlib~=3.10.1
