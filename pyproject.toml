@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reward-composer"
+version = "0.1.0"
+description = "A composable framework for reward functions in reinforcement learning from human feedback"
+readme = "README.md"
+authors = [
+    {name = "Kubernetes Bad", email = "kubernetes_bad@proton.me"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.26.4",
+    "spacy>=3.8.4",
+    "aiohttp>=3.11.13",
+    "tenacity>=9.0.0",
+    "Jinja2>=3.1.6",
+    "matplotlib>=3.10.1",
+]
+
+[project.optional-dependencies]
+wandb = [
+    "wandb>=0.19.8",
+    "pandas>=2.2.3",
+]
+all = [
+    "wandb>=0.19.8",
+    "pandas>=2.2.3",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kubernetes-bad/reward-composer"
+"Bug Tracker" = "https://github.com/kubernetes-bad/reward-composer/issues"

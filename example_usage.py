@@ -1,13 +1,11 @@
 from typing import List
 
-from blacklist_qualifier import BlacklistQualifier
-from composite_reward import CompositeReward
-from example_rewards.length_reward import LengthReward
-from example_rewards.llm_judge import LLMJudge
-from example_rewards.repetition_reward import RepetitionReward
-from qualifiers import ThresholdQualifier, AllQualifier
-from ngram_blacklist_qualifier import NgramBlacklistQualifier
-from rewards import master_reward
+from reward_composer import master_reward
+from reward_composer.composite_reward import CompositeReward
+from reward_composer.example_rewards import LengthReward, RepetitionReward, LLMJudge
+from reward_composer.qualifiers import AllQualifier, ThresholdQualifier
+from reward_composer.blacklist_qualifier import BlacklistQualifier
+from reward_composer.ngram_blacklist_qualifier import NgramBlacklistQualifier
 
 MODEL_NAME = "grok-2-1212"
 REQUESTS_PER_KEY = 2
@@ -25,7 +23,7 @@ repetition_reward = RepetitionReward(max_copied_words=5)
 composite_gimmick_reward = CompositeReward( # don't actually use this - this is for demonstration purposes only!
     base_rewards=[length_reward],
     bonus_rewards=[
-        (repetition_reward, ThresholdQualifier(reward_name=length_reward.name, threshold=0.3)), # unscaled!
+        (repetition_reward, ThresholdQualifier(reward_name=length_reward.name, threshold=0.3)),  # unscaled!
     ],
     weight=0.6,
 )
@@ -50,7 +48,8 @@ slop_qualifier = AllQualifier(
 
 llm_judge_qualifier = ThresholdQualifier(reward_name=llm_judge_reward.name, threshold=0.3)
 
-# axolotl entry point
+
+# trainer entry point
 def total_reward(completions: List[str], prompts: List[str], **kwargs) -> List[float]:
     return master_reward(
         completions=completions,

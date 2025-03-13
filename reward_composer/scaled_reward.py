@@ -2,7 +2,7 @@ import math
 from enum import Enum, auto
 from typing import Callable, Optional, List
 
-from rewards import RewardFunction, timed_execution
+from .rewards import RewardFunction, timed_execution
 
 
 class ScalingFunction(Enum):

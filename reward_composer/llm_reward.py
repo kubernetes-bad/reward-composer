@@ -13,7 +13,7 @@ import numpy as np
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 import jinja2
 
-from rewards import RewardFunction, timed_execution
+from .rewards import RewardFunction, timed_execution
 
 logging.basicConfig(
     level=logging.INFO,

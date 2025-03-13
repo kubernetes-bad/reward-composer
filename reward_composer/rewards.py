@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from qualifiers import Qualifier
+from .qualifiers import Qualifier
 
 
 @dataclass

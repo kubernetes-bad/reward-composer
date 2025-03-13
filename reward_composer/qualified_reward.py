@@ -1,7 +1,7 @@
 from typing import List
 
-from qualifiers import Qualifier
-from rewards import RewardFunction
+from .qualifiers import Qualifier
+from .rewards import RewardFunction
 
 class QualifiedReward(RewardFunction):
     """A reward function that only applies if a qualifier returns True."""

@@ -4,7 +4,7 @@ from typing import List
 
 import spacy
 
-from qualifiers import QualifierInput, Qualifier
+from .qualifiers import QualifierInput, Qualifier
 
 nlp = spacy.load("en_core_web_sm")
 

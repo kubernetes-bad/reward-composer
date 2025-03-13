@@ -3,8 +3,8 @@ from typing import Union, List, Tuple, Optional
 
 import numpy as np
 
-from rewards import RewardFunction, get_wandb
-from qualifiers import Qualifier
+from .rewards import RewardFunction, get_wandb
+from .qualifiers import Qualifier
 
 
 class CompositeReward(RewardFunction):

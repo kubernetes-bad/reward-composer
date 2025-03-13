@@ -1,6 +1,6 @@
 import json
 
-from qualifiers import Qualifier, QualifierInput
+from .qualifiers import Qualifier, QualifierInput
 
 
 class BlacklistQualifier(Qualifier):
