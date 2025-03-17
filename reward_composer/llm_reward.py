@@ -5,6 +5,7 @@ import re
 import statistics
 import threading
 import time
+from asyncio import Semaphore
 from itertools import cycle
 from typing import List, Optional, Callable, Sequence, Union
 import random
@@ -179,7 +180,8 @@ class LLMReward(RewardFunction):
         )
         self.prompt_template = self.template_env.from_string(prompt_template)
         self.output_parser = output_parser or LLMReward._default_output_parser
-        self.semaphore = asyncio.Semaphore(max_concurrent_requests)
+        self.max_concurrent_requests = max_concurrent_requests
+        self._semaphore: Optional[Semaphore] = None
 
         # retry stuff
         self.max_retries = max_retries
@@ -260,7 +262,7 @@ class LLMReward(RewardFunction):
             stop=stop_after_attempt(self.max_retries) if self.max_retries > 0 else None
         )
         async def _make_request():
-            async with self.semaphore:
+            async with self._semaphore:
                 api_key = self.key_manager.get_next_key()
 
                 headers = {
@@ -304,22 +306,22 @@ class LLMReward(RewardFunction):
                         self.key_manager.mark_rate_limited(api_key, retry_after)
                         logger.warning(f"Rate limited. Waiting for {retry_after} seconds.")
                         await asyncio.sleep(1)  # Short sleep before trying the next key
-                    raise ValueError("Rate limited, trying next key")
+                    raise ValueError("Rate limited, trying next key", e)
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     logger.error(f"API request failed: {str(e)}")
                     await asyncio.sleep(random.uniform(0, 2)) # jitter
                     raise e
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse API response: {str(e)}")
-                    raise ValueError("Failed to parse API response")
+                    raise ValueError("Failed to parse API response", e)
                 except Exception as e:
                     logger.error(f"Unexpected error during API request: {str(e)}")
-                    raise ValueError("Unexpected error during API request")
+                    raise ValueError("Unexpected error during API request", e)
 
         try:
             return await _make_request()
         except Exception as e:
-            logger.error(f"All retries failed for API request: {str(e)}")
+            logger.error(f"All retries failed for API request: {str(e)}", e)
             return self.default_score
 
     def _aggregate_scores(self, scores: List[float]) -> float:
@@ -398,6 +400,7 @@ class LLMReward(RewardFunction):
             :return List of scores in the same order as completions
         """
         self.raw_scores = {} # clear old shit
+        self._semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
         async with aiohttp.ClientSession() as session:
             coroutines = [
@@ -436,15 +439,9 @@ class LLMReward(RewardFunction):
         Returns:
             :return List of reward scores
         """
+
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running(): # we in jupyter notebooks?
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(lambda: asyncio.run(self._evaluate_batch(completions, prompts)))
-                    scores = future.result()
-            else:
-                scores = loop.run_until_complete(self._evaluate_batch(completions, prompts))
+            return asyncio.run(self._evaluate_batch(completions, prompts))
 
         except Exception as e:
             logger.error(f"Failed to evaluate batch: {str(e)}")
