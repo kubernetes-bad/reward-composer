@@ -1,7 +1,7 @@
 import functools
 import time
 from abc import ABC, abstractmethod
-from typing import List, Union, Tuple, Optional, Dict
+from typing import List, Union, Tuple, Optional, Dict, TypeVar
 import logging
 from dataclasses import dataclass
 
@@ -19,6 +19,7 @@ SingleTurnInput = Tuple[List[str], List[str]]
 MultiTurnInput = Tuple[List[List[Message]], List[Message]]
 RewardInput = Union[SingleTurnInput, MultiTurnInput]
 RewardOutput = List[float]
+T = TypeVar('T', bound='RewardFunction')
 
 @functools.cache
 def get_wandb():
@@ -70,6 +71,10 @@ class RewardFunction(ABC):
 
         except Exception as e:
             logging.warning(f"Failed to log to wandb: {e}")
+
+    def with_weight(self: T, weight: float) -> T:
+        self.weight = weight
+        return self
 
 def master_reward(
         completions: List[str],

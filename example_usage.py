@@ -17,7 +17,7 @@ API_KEYS = [
 ]
 
 # rewards
-length_reward = LengthReward(target_length=2000, plateau=200, weight=1.3)
+length_reward = LengthReward(target_length=2000, plateau=200)
 repetition_reward = RepetitionReward(max_copied_words=5)
 
 composite_gimmick_reward = CompositeReward( # don't actually use this - this is for demonstration purposes only!
@@ -25,7 +25,6 @@ composite_gimmick_reward = CompositeReward( # don't actually use this - this is 
     bonus_rewards=[
         (repetition_reward, ThresholdQualifier(reward_name=length_reward.name, threshold=0.3)),  # unscaled!
     ],
-    weight=0.6,
 )
 
 llm_judge_reward = LLMJudge(
@@ -33,7 +32,6 @@ llm_judge_reward = LLMJudge(
     api_key=API_KEYS,
     model=MODEL_NAME,
     max_concurrent_requests=len(API_KEYS) * REQUESTS_PER_KEY,
-    weight=1.5,
 )
 
 # qualifiers
@@ -55,10 +53,10 @@ def total_reward(completions: List[str], prompts: List[str], **kwargs) -> List[f
         completions=completions,
         prompts=prompts,
         reward_functions=[
-            length_reward,
-            repetition_reward,
-            llm_judge_reward,
-            composite_gimmick_reward,
+            length_reward.with_weight(1.3),
+            repetition_reward, # default weight is 1.0
+            llm_judge_reward.with_weight(1.5),
+            composite_gimmick_reward.with_weight(0.6),
         ],
         global_qualifier=AllQualifier(qualifiers=[
             slop_qualifier,
