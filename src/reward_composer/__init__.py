@@ -2,7 +2,7 @@
 Reward Framework: A composable framework for reward functions in reinforcement learning from human feedback.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .rewards import (
     RewardFunction,
