@@ -11,6 +11,7 @@ from .rewards import (
     master_reward,
     get_wandb,
 )
+from .multiturn_reward import MultiTurnRewardFunction, MultiTurnInput, Message
 
 from .qualified_reward import QualifiedReward
 from .scaled_reward import ScaledReward
@@ -34,6 +35,8 @@ __all__ = [
     "Qualifier",
     "ThresholdQualifier",
     "master_reward",
+    "MultiTurnRewardFunction",
+    "MultiTurnInput",
     "Message",
     "Qualifier",
     "QualifierInput",

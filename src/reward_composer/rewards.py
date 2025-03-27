@@ -1,24 +1,13 @@
 import functools
 import time
 from abc import ABC, abstractmethod
-from typing import List, Union, Tuple, Optional, Dict, TypeVar
+from typing import List, Optional, Dict, TypeVar
 import logging
-from dataclasses import dataclass
 
 import numpy as np
 
 from .qualifiers import Qualifier
 
-
-@dataclass
-class Message: # multiturn convo message
-    role: str  # "user" | "assistant" | "system"
-    content: str
-
-SingleTurnInput = Tuple[List[str], List[str]]
-MultiTurnInput = Tuple[List[List[Message]], List[Message]]
-RewardInput = Union[SingleTurnInput, MultiTurnInput]
-RewardOutput = List[float]
 T = TypeVar('T', bound='RewardFunction')
 
 @functools.cache
