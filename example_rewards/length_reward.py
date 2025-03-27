@@ -1,7 +1,7 @@
 import math
 from typing import List
 
-from ..rewards import RewardFunction, timed_execution
+from reward_composer import RewardFunction, timed_execution
 
 def gaussian(length: int, target_length: int, sigma: float) -> float:
     return math.exp(-((length - target_length) ** 2) / (2 * sigma ** 2))

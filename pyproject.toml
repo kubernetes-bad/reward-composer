@@ -10,10 +10,9 @@ readme = "README.md"
 authors = [
     {name = "Kubernetes Bad", email = "kubernetes_bad@proton.me"}
 ]
-license = {text = "MIT"}
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -33,10 +32,23 @@ wandb = [
     "wandb>=0.19.8",
     "pandas>=2.2.3",
 ]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-asyncio",
+]
 all = [
     "wandb>=0.19.8",
     "pandas>=2.2.3",
 ]
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["reward_composer*"]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
 
 [project.urls]
 "Homepage" = "https://github.com/kubernetes-bad/reward-composer"

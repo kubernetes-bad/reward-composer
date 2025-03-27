@@ -51,7 +51,6 @@ class RewardFunction(ABC):
         self.last_execution_time = None
 
     @abstractmethod
-    @timed_execution
     def __call__(self, completions: List[str], prompts: List[str], **kwargs) -> List[float]:
         """Calculate reward scores for completions"""
         pass

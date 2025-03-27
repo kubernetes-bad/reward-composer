@@ -1,7 +1,7 @@
 import re
 from typing import List, Union
 
-from ..rewards import RewardFunction, timed_execution
+from reward_composer import RewardFunction, timed_execution
 
 GRADE_GOOD = 1.0
 GRADE_BAD = 0.0

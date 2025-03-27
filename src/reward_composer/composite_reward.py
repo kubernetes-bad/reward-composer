@@ -108,7 +108,6 @@ class CompositeReward(RewardFunction):
                 if self.base_rewards:
                     base_weights_sum = sum(reward.weight for reward in self.base_rewards)
                     normalized_base_sum = (base_sum / base_weights_sum) * self.base_max if base_weights_sum > 0 else 0
-                    normalized_base_sum = min(normalized_base_sum, self.base_max)
                 else:
                     normalized_base_sum = 0
             else:
@@ -132,7 +131,6 @@ class CompositeReward(RewardFunction):
 
             if bonus_weights_sum > 0:
                 normalized_bonus_sum = (bonus_sum / bonus_weights_sum) * self.bonus_max
-                normalized_bonus_sum = min(normalized_bonus_sum, self.bonus_max)
             else:
                 normalized_bonus_sum = 0
 
@@ -164,7 +162,7 @@ class CompositeReward(RewardFunction):
                     np.mean(self._base_values[reward_fn.name])
 
             for reward_fn in self.bonus_rewards:
-                if reward_fn.name not in self._base_values:
+                if reward_fn.name not in self._bonus_values:
                     continue
 
                 wandb_data[f"train/rewards/components/{self.name}/{reward_fn.name}"] = \

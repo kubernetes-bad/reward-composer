@@ -306,17 +306,17 @@ class LLMReward(RewardFunction):
                         self.key_manager.mark_rate_limited(api_key, retry_after)
                         logger.warning(f"Rate limited. Waiting for {retry_after} seconds.")
                         await asyncio.sleep(1)  # Short sleep before trying the next key
-                    raise ValueError("Rate limited, trying next key", e)
+                    raise ValueError("Rate limited, trying next key")
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     logger.error(f"API request failed: {str(e)}")
                     await asyncio.sleep(random.uniform(0, 2)) # jitter
                     raise e
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse API response: {str(e)}")
-                    raise ValueError("Failed to parse API response", e)
+                    raise ValueError("Failed to parse API response")
                 except Exception as e:
                     logger.error(f"Unexpected error during API request: {str(e)}")
-                    raise ValueError("Unexpected error during API request", e)
+                    raise ValueError("Unexpected error during API request")
 
         try:
             return await _make_request()

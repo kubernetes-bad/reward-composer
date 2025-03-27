@@ -4,3 +4,7 @@ Jinja2~=3.1.6
 tenacity~=9.0.0
 spacy~=3.8.4
 setuptools~=76.0.0
+
+pytest~=8.3.5
+matplotlib~=3.10.1
+pandas~=2.2.3
