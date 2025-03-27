@@ -19,6 +19,8 @@ from .llm_reward import LLMReward
 from .composite_reward import CompositeReward
 from .blacklist_qualifier import BlacklistQualifier
 from .ngram_blacklist_qualifier import NgramBlacklistQualifier
+from .async_reward import AsyncReward
+from .async_llm_reward import AsyncLLMReward
 
 from .qualifiers import (
     Qualifier,
@@ -42,6 +44,8 @@ __all__ = [
     "QualifierInput",
     "QualifierFn",
     "ThresholdQualifier",
+    "AsyncReward",
+    "AsyncLLMReward",
     "timed_execution",
     "get_wandb",
 ]
