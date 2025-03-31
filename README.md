@@ -1,5 +1,5 @@
 # Reward Composer
-Reward function design building blocks, compatible with [Axolotl](https://github.com/axolotl-ai-cloud/axolotl).
+Reward function design building blocks, compatible with [TRL](https://github.com/huggingface/trl) and [Axolotl](https://github.com/axolotl-ai-cloud/axolotl).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -9,12 +9,14 @@ Reward Composer is a collection of simple building blocks for making your perfec
 It enables researchers to build complex evaluation criteria by combining simple re-usable components in a declarative way.
 It is useful for reinforcement learning from human feedback (RLHF), model evaluation, and automated text quality assessment.
 
-It's like Lego for GRPO.
+**It's like Lego for GRPO.**
 
 ## Features
 - Composable reward functions: Build complex evaluation criteria from simple building blocks
 - Flexible qualifiers: Apply rewards conditionally based on qualification logic
 - Non-linear scaling: Transform reward scores with various scaling functions
+- Async Reward handling: evaluate your batches in parallel, not worrying about event loops, locks and synchronization.
+- Multi-turn dataset support: supports both TRL's classic datasets (completion and prompt are strings) as well as conversational datasets (completion and prompt are lists of messages with roles).
 - Weights & Biases integration: Automatic logging of individual reward function scores and full completions
 - Tracking performance: log individual reward function wall-clock times to WandB
 - Extensible: Easily add new reward functions and qualifiers
@@ -25,6 +27,8 @@ First, write your main reward function:
 
 > See [example_usage.py](example_usage.py)
 
+### Axolotl
+
 In Axolotl, add your main reward function as the only reward function:
 ```yaml
 rl: grpo
@@ -34,6 +38,10 @@ trl:
   reward_funcs:
     - your_reward_file_name_without_extension.your_main_reward_function_name
 ```
+
+### TRL
+
+When used with TRL GRPO trainer, pass path to your main reward function name as the *only* reward function to your trainer's `reward_functions`. 
 
 ## Core Components
 
@@ -119,6 +127,58 @@ reward = ScaledReward(
     k=10.0,  # controls steepness of the scaling
 )
 ```
+
+## Multi-turn dataset Rewards
+
+Inherit your reward class from `MultiTurnRewardFunction` to be able to handle multi-turn (conversational) prompts and completions.
+
+```python
+class MyMultiturnReward(MultiTurnRewardFunction):
+    def __call__(self, completions: List[List[Message]], prompts: List[List[Message]], **kwargs) -> List[float]:
+        for completion_convo, prompt_convo in zip(completions, prompts):
+            # completion_convo and prompt_convo are now both List[Message] like [{ "role": "user", "content": "Hello!" }, { "role": "assistant", "content": "Hi!" }]
+            pass
+```
+
+You can wrap your single-turn reward with `MultiTurnRewardWrapper` to make it "understand" multi-turn datasets!
+```python
+my_single_turn_reward_fn = LLMReward( ... ) # for example
+
+def my_prompt_parser(prompt_convo: List[Message]) -> str:
+    # converts List[Message] to str in a format that your reward function can do something with.
+    # it's optional, and if not provided - default one will be used - it will just extract the very last message in the conversation.
+    return 'hello'
+    
+def my_completion_parser(completion_convo: List[Message]) -> str:
+    # same format as prompt parser, but can have different logic.
+    return 'hi' 
+
+my_multi_turn_reward_fn = MultiTurnRewardWrapper(
+    single_turn_reward_function=my_single_turn_reward_fn,
+    name="my_wrapped_reward",
+    prompt_parser=my_prompt_parser,
+    completion_parser=my_completion_parser,
+)
+```
+
+## Async Rewards
+
+Async reward class does exact same thing as `RewardFunction`, but in contrast to it, does so - as the name suggests - in parallel manner. Each tuple of (completion, prompt) is evaluated in parallel, and you only have to provide method `evaluate_one` method in your reward implementation.
+
+If any exceptions are raised while evaluating a batch, they are replaced with `default_score` (and logged on console).
+
+```python
+class MyAsyncReward(AsyncReward):
+    async def evaluate_one(self, completion: str, prompt: str, **kwargs) -> float:
+        # implement your logic on how to score a single pair of (completion, prompt) here and it will be
+        # evaluated in parallel with other pairs in the batch.
+        return 0.5
+```
+
+### AsyncLLMReward
+
+`AsyncLLMReward` can be used in the same way as `LLMReward`. The only difference is that AsyncLLMReward inherits AsyncReward and therefore has barely any logic around handling batches and event loops. 
+ 
 
 ## Qualifier Types
 
