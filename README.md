@@ -246,6 +246,19 @@ llm_judge_reward = LLMJudge(
 )
 ```
 
+### MultiturnLLMJudge
+`MultiturnLLMJudge` showcases how to grade multi-turn conversations using `AsyncLLMReward`. It highlights judge LLM templating and completion/prompt preprocessing.
+
+```python
+multiturn_llm_judge = MultiturnLLMJudge(
+    api_url="https://api.x.ai/v1/chat/completions",
+    api_key=['api-key-1', 'api-key-2'], # will round robin your keys
+    model='grok-3',
+    max_concurrent_requests=2,
+)
+```
+Since it inherits from AsyncLLM reward, it will process each batch in parallel, greatly saving on training time.
+
 ### RepetitionReward
 `RepetitionReward` penalizes completions that copy long chunks of text from the prompt.
 
