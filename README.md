@@ -41,7 +41,40 @@ trl:
 
 ### TRL
 
-When used with TRL GRPO trainer, pass path to your main reward function name as the *only* reward function to your trainer's `reward_functions`. 
+When used with TRL GRPO trainer, pass path to your main reward function name as the *only* reward function to your trainer's `reward_functions`.
+
+```python
+from reward_composer import master_reward
+
+# define your individual rewards and qualifiers
+my_reward_fn_reward = LengthReward(target_length=2000, plateau=200, weight=1.3)
+slop_qualifier = NgramBlacklistQualifier(blacklist_path='./data/slop_ngram.json')
+
+# pass your master reward function into TRL's GRPOTrainer
+def total_reward(completions: List[str], prompts: List[str], **kwargs) -> List[float]:
+    return master_reward(
+        completions=completions,
+        prompts=prompts,
+        reward_functions=[
+            my_reward_fn_reward,
+            # more rewards here ...,
+        ],
+        global_qualifier=slop_qualifier,
+        **kwargs,
+    )
+
+trainer = GRPOTrainer(
+    model="Qwen/Qwen2-0.5B-Instruct",
+    reward_funcs=total_reward,
+    args=GRPOConfig(
+        output_dir="Qwen2-0.5B-GRPO",
+        logging_steps=10,
+    ),
+    train_dataset=dataset,
+)
+
+trainer.train()
+```
 
 ## Core Components
 
