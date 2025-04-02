@@ -12,9 +12,9 @@ import jinja2
 import numpy as np
 from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt, stop_never
 
-from reward_composer import Message
-from reward_composer.async_reward import AsyncReward
-from reward_composer.llm_reward import APIKeyManager
+from .rewards import Message
+from .async_reward import AsyncReward
+from .llm_reward import APIKeyManager
 
 logger = logging.getLogger("AsyncLLMReward")
 

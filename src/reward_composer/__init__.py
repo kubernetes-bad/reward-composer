@@ -2,16 +2,17 @@
 Reward Framework: A composable framework for reward functions in reinforcement learning from human feedback.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 from .rewards import (
     RewardFunction,
-    Qualifier,
     timed_execution,
     master_reward,
     get_wandb,
+    MultiTurnInput,
+    Message,
 )
-from .multiturn_reward import MultiTurnRewardFunction, MultiTurnInput, Message
+from .multiturn_reward import MultiTurnRewardFunction, MultiTurnInput
 
 from .qualified_reward import QualifiedReward
 from .scaled_reward import ScaledReward

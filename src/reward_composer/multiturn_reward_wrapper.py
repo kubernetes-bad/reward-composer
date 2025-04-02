@@ -1,6 +1,7 @@
 from typing import List, Optional, Callable
 
-from reward_composer import MultiTurnRewardFunction, MultiTurnInput, RewardFunction, Message, timed_execution
+from .rewards import timed_execution, Message
+from .multiturn_reward import MultiTurnRewardFunction, MultiTurnInput, RewardFunction
 
 
 class MultiTurnRewardWrapper(MultiTurnRewardFunction):

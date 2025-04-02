@@ -3,7 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from reward_composer import RewardFunction, Message, timed_execution
+from .rewards import RewardFunction, timed_execution, MultiTurnInput, Message
 
 logger = logging.getLogger("AsyncReward")
 
@@ -15,8 +15,8 @@ class AsyncReward(RewardFunction, ABC):
 
     @timed_execution
     def __call__(self,
-        completions: List[Union[List[Message], str]],
-        prompts: List[Union[List[Message], str]],
+        completions: Union[MultiTurnInput, List[str]],
+        prompts: Union[MultiTurnInput, List[str]],
         **kwargs,
     ) -> List[float]:
         try:

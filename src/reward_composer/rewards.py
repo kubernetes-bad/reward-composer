@@ -1,15 +1,22 @@
 import functools
 import time
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import List, Optional, Dict, TypeVar, Union
 import logging
 
 import numpy as np
 
-from .multiturn_reward import MultiTurnInput
 from .qualifiers import Qualifier
 
 T = TypeVar('T', bound='RewardFunction')
+
+@dataclass
+class Message: # multiturn convo message
+    role: str  # "user" | "assistant" | "system"
+    content: str
+
+MultiTurnInput = List[List[Message]]
 
 @functools.cache
 def get_wandb():
