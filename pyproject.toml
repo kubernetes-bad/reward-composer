@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reward-composer"
-version = "0.1.0"
+version = "0.2.0"
 description = "A composable framework for reward functions in reinforcement learning from human feedback"
 readme = "README.md"
 authors = [

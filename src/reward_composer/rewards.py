@@ -1,11 +1,12 @@
 import functools
 import time
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, TypeVar
+from typing import List, Optional, Dict, TypeVar, Union
 import logging
 
 import numpy as np
 
+from .multiturn_reward import MultiTurnInput
 from .qualifiers import Qualifier
 
 T = TypeVar('T', bound='RewardFunction')
@@ -65,8 +66,8 @@ class RewardFunction(ABC):
         return self
 
 def master_reward(
-        completions: List[str],
-        prompts: List[str],
+        completions: Union[List[str], MultiTurnInput],
+        prompts: Union[List[str], MultiTurnInput],
         reward_functions: List[RewardFunction],
         log_to_wandb: bool = True,
         global_qualifier: Optional[Qualifier] = None,
