@@ -231,7 +231,7 @@ class AsyncLLMReward(AsyncReward):
         try:
             return await _make_request()
         except Exception as e:
-            logger.error(f"All retries failed for API request: {str(e)}", e)
+            logger.error(f"All retries failed for API request: {str(e)}")
             return None
 
     def _aggregate_scores(self, scores: List[float]) -> float:
