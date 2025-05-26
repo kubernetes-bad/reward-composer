@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 score_float_pattern_str = r"(?:score|rating):\s*(?:\[)?(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?(?:\])?"
 score_pattern = re.compile(score_float_pattern_str, re.IGNORECASE)
 
+class RateLimitedError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 class APIKeyManager:
     """
@@ -256,7 +259,7 @@ class LLMReward(RewardFunction):
         }
 
         @retry(
-            retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError, json.JSONDecodeError)),
+            retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError, json.JSONDecodeError, RateLimitedError)),
             wait=wait_exponential(multiplier=self.retry_base_delay, max=self.retry_max_delay),
             before_sleep=lambda retry_state: logger.warning(
                 f"Retrying API request (attempt {retry_state.attempt_number}/{self.max_retries})"
@@ -314,7 +317,7 @@ class LLMReward(RewardFunction):
                         self.key_manager.mark_rate_limited(api_key, retry_after)
                         logger.warning(f"Rate limited. Waiting for {retry_after} seconds.")
                         await asyncio.sleep(1)  # Short sleep before trying the next key
-                    raise ValueError("Rate limited, trying next key")  # THIS IS WHERE ERROR IS RAISED
+                    raise RateLimitedError("Rate limited, trying next key")
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     logger.error(f"API request failed: {str(e)}")
                     await asyncio.sleep(random.uniform(0, 2)) # jitter
