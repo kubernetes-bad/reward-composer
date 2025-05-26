@@ -5,6 +5,7 @@ import random
 import re
 import statistics
 from asyncio import Semaphore
+
 from typing import Union, List, Sequence, Optional, Callable
 
 import aiohttp
@@ -12,11 +13,11 @@ import jinja2
 import numpy as np
 from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt, stop_never
 
-from .rewards import Message
+from .rewards import Message, get_weave
 from .async_reward import AsyncReward
 from .llm_reward import APIKeyManager
 
-logger = logging.getLogger("AsyncLLMReward")
+logger = logging.getLogger(__name__)
 
 # for default score parser. You're encouraged to write your own parser
 score_float_pattern_str = r"(?:score|rating):\s*(?:\[)?(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?(?:\])?"
@@ -42,7 +43,7 @@ class AsyncLLMReward(AsyncReward):
         ensemble_aggregation: str = "median",  # "mean", "median", "mode", "min", "max"
         name: str = "llm_reward",
         weight: float = 1.0,
-        system_prompt: str = "You are an AI assistant that evaluates text quality.",
+        system_prompt: Optional[str] = None,
         timeout: float = 30.0,
         default_score: float = 0.5,
     ):
@@ -85,6 +86,14 @@ class AsyncLLMReward(AsyncReward):
     def __call__(self, completions: List[Union[List[Message], str]], prompts: List[Union[List[Message], str]], **kwargs):
         self._semaphore = Semaphore(self.max_concurrent_requests)
         return super().__call__(completions=completions, prompts=prompts, **kwargs)
+
+    async def evaluate_async(self,
+        completions: List[Union[List[Message], str]],
+        prompts: List[Union[List[Message], str]],
+        **kwargs,
+    ) -> List[float]:
+        self._semaphore = Semaphore(self.max_concurrent_requests)
+        return await super().evaluate_async(completions=completions, prompts=prompts, **kwargs)
 
     async def _evaluate_batch(self,
         completions: List[List[Union[Message, str]]],
@@ -154,10 +163,7 @@ class AsyncLLMReward(AsyncReward):
 
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": user_text},
-            ],
+            "messages": [{"role": "system", "content": self.system_prompt}, {"role": "user", "content": user_text}] if self.system_prompt else [{"role": "user", "content": user_text}],
             "temperature": max(0.0, min(self.temperature + random.uniform(-0.05, 0.05), 1.0)), # jitter to overcome prompt caching
             "max_tokens": self.max_tokens,
             "top_p": self.top_p,
@@ -182,6 +188,13 @@ class AsyncLLMReward(AsyncReward):
                 }
 
                 try:
+                    weave_module = get_weave()
+                    if weave_module:
+                        call = weave_module.create_call(
+                            op=f"llm_request_{self.model}",
+                            inputs=payload,
+                        )
+
                     async with session.post(
                         self.api_url,
                         json=payload,
@@ -197,6 +210,8 @@ class AsyncLLMReward(AsyncReward):
                         response.raise_for_status()
 
                         result = await response.json()
+                        if weave_module:
+                            weave_module.finish_call(call, output=result)
 
                         if "choices" in result and len(result["choices"]) > 0:
                             if "message" in result["choices"][0]:
@@ -210,7 +225,7 @@ class AsyncLLMReward(AsyncReward):
                         return content
 
                 except aiohttp.ClientResponseError as e:
-                    logger.error(f"API request failed with status {e.status}: {e.message}")
+                    logger.error(f"API request failed with status {e.status}: {e.message}\n{json.dumps(e.request_info.headers, indent=2)}")
                     if e.status == 429:
                         retry_after = float(e.headers.get("Retry-After", self.retry_max_delay))
                         self.key_manager.mark_rate_limited(api_key, retry_after)

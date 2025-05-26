@@ -14,13 +14,13 @@ import numpy as np
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 import jinja2
 
-from .rewards import RewardFunction, timed_execution
+from .rewards import RewardFunction, timed_execution, get_weave
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger("LLMReward")
+logger = logging.getLogger(__name__)
 
 
 # for default score parser. You're encouraged to write your own parser
@@ -125,7 +125,7 @@ class LLMReward(RewardFunction):
         ensemble_aggregation: str = "median",  # "mean", "median", "mode", "min", "max"
         name: str = "llm_reward",
         weight: float = 1.0,
-        system_prompt: str = "You are an AI assistant that evaluates text quality.",
+        system_prompt: Optional[str] = None,
         timeout: float = 30.0,
         default_score: float = 0.5,
     ):
@@ -246,6 +246,8 @@ class LLMReward(RewardFunction):
             "messages": [
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": formatted_prompt},
+            ] if self.system_prompt else [
+                {"role": "user", "content": formatted_prompt},
             ],
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
@@ -271,6 +273,10 @@ class LLMReward(RewardFunction):
                 }
 
                 try:
+                    weave_module = get_weave()
+                    if weave_module:
+                        call = weave_module.create_call(op=f"llm_request_{self.model}", inputs=payload)
+
                     async with session.post(
                         self.api_url,
                         json=payload,
@@ -286,6 +292,8 @@ class LLMReward(RewardFunction):
                         response.raise_for_status()
 
                         result = await response.json()
+                        if weave_module:
+                            weave_module.finish_call(call, output=result)
 
                         if "choices" in result and len(result["choices"]) > 0:
                             if "message" in result["choices"][0]:
@@ -306,7 +314,7 @@ class LLMReward(RewardFunction):
                         self.key_manager.mark_rate_limited(api_key, retry_after)
                         logger.warning(f"Rate limited. Waiting for {retry_after} seconds.")
                         await asyncio.sleep(1)  # Short sleep before trying the next key
-                    raise ValueError("Rate limited, trying next key")
+                    raise ValueError("Rate limited, trying next key")  # THIS IS WHERE ERROR IS RAISED
                 except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                     logger.error(f"API request failed: {str(e)}")
                     await asyncio.sleep(random.uniform(0, 2)) # jitter
@@ -321,7 +329,7 @@ class LLMReward(RewardFunction):
         try:
             return await _make_request()
         except Exception as e:
-            logger.error(f"All retries failed for API request: {str(e)}", e)
+            logger.error(f"All retries failed for API request: {str(e)}", exc_info=True)
             return self.default_score
 
     def _aggregate_scores(self, scores: List[float]) -> float:

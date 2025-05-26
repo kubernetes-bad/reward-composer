@@ -2,7 +2,7 @@ import functools
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Dict, TypeVar, Union
+from typing import List, Optional, Dict, TypeVar, Union, Callable
 import logging
 
 import numpy as np
@@ -10,6 +10,10 @@ import numpy as np
 from .qualifiers import Qualifier
 
 T = TypeVar('T', bound='RewardFunction')
+
+C = TypeVar('C', bound=Callable)
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class Message: # multiturn convo message
@@ -25,6 +29,23 @@ def get_wandb():
         return wandb
     except ImportError:
         logging.warning(f"wandb not installed. Skipping logging for reward functions.")
+        return None
+
+
+@functools.cache
+def get_weave(project_name: str = "llm-tracing"):
+    try:
+        import weave
+
+        # init same project as wandb
+        wandb = get_wandb()
+        if wandb and hasattr(wandb, 'run') and wandb.run is not None:
+            project_name = wandb.run.project
+
+        return weave.init(project_name=project_name)
+
+    except ImportError:
+        logging.warning("weave is not installed. Skipping LLM call tracing.")
         return None
 
 def timed_execution(method):

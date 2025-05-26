@@ -9,6 +9,7 @@ from .rewards import (
     timed_execution,
     master_reward,
     get_wandb,
+    get_weave,
     MultiTurnInput,
     Message,
 )
@@ -52,9 +53,11 @@ __all__ = [
     "ScaledReward",
     "LLMReward",
     "CompositeReward",
+    "BlacklistQualifier",
     "NgramBlacklistQualifier",
     "AsyncReward",
     "AsyncLLMReward",
     "timed_execution",
     "get_wandb",
+    "get_weave",
 ]
