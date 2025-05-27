@@ -1,5 +1,7 @@
 from unittest.mock import patch, MagicMock
 
+import pytest
+
 from reward_composer import (
     RewardFunction,
     master_reward,
@@ -7,6 +9,10 @@ from reward_composer import (
     get_wandb,
     Qualifier, QualifierInput,
 )
+
+@pytest.fixture(autouse=True)
+def clear_caches():
+    get_wandb.cache_clear()
 
 
 class DummyRewardFunction(RewardFunction):
